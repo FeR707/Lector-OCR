@@ -1,0 +1,16 @@
+.ocr {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.ocr * {
+    margin-top: 5px;
+}
+
+.text {
+    width: 80%;
+    height: 150px;
+}
