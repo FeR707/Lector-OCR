@@ -63,21 +63,35 @@ let api =
         })
 
         function convertToJSON(name, genero, fechaNacimiento, curp, seccion, claveElector, domicilio) {
-            // Crear un objeto JavaScript con los valores
             let parts = name.split(' ');
             let apellidoPaterno = parts[0];
             let apellidoMaterno = parts[1];
             let nombre = parts.slice(2).join(' ');
 
+            let partsD = domicilio.split(' ');
+            let estado = partsD.pop().replace(/\.$/, '');
+            let domicilioL = partsD.join(' ');
+
+            let partM = domicilioL.split(' ');
+            let municipio = partM.pop().replace(/\,$/, '');
+            let domicilioC = partM.join(' ');
+
+            let partC = domicilioC.split(' ');
+            let cp = partC.pop();
+            let domicilioCalle = partC.join(' ');
+
             let jsonObject = {
                 "nombre": nombre,
-                "apellidoPaterno": apellidoPaterno,
-                "apellidoMaterno": apellidoMaterno,
+                "apellido_paterno": apellidoPaterno,
+                "apellido_materno": apellidoMaterno,
                 "genero": genero,
-                "fechaNacimiento": fechaNacimiento,
-                "domicilio": domicilio,
+                "fecha_nacimiento": fechaNacimiento,
+                "calle": domicilioCalle,
+                "estado": estado,
+                "municipio": municipio,
+                "cp": cp,
                 "curp": curp,
-                "claveElector": claveElector,
+                "clave_elector": claveElector,
                 "seccion": seccion,
             };
 
