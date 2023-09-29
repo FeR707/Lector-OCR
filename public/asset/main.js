@@ -17,7 +17,7 @@ btn.addEventListener('click', () => {
             body: JSON.stringify({
                 file: b64,
                 type: fileInput.files[0].type,
-                name: fileInput.files[0].name
+                nombre: fileInput.files[0].nombre
             })
         })
 
@@ -25,63 +25,53 @@ btn.addEventListener('click', () => {
             .then(res => res.text())
             .then(data => {
 
-                // Expresion regular nombre
-                let name = data.match(/(NOMBRE)[\s]([A-Z]+\s[A-Z]+(\s(?:(?!DOMICILIO)[A-Z])+){1,2})/g)[0];
-                name = name.replace(/NOMBRE|DOMICILIO/g, '').trim();
-                name = name.replace(/\s+/g, ' ');
+                let nombreMatch = data.match(/(NOMBRE)[\s]([A-Z]+\s[A-Z]+(\s(?:(?!DOMICILIO)[A-Z])+){1,2})/g);
+                let generoMatch = data.match(/(SEXO)[\s]([HM])/g);
+                let fechaNacimientoMatch = data.match(/(0[1-9]|[12][0-9]|3[01])[/](0[1-9]|1[0-2])[/]\d{4}/g);
+                let curpMatch = data.match(/([A-Z][AEIOUX][A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])[HM](?:AS|B[CS]|C[CLMSH]|D[FG]|G[TR]|HG|JC|M[CNS]|N[ETL]|OC|PL|Q[TR]|S[PLR]|T[CSL]|VZ|YN|ZS)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d])(\d)/g);
+                let seccionMatch = data.match(/(SECCIÓN)[\s]([0-9]{4}|(VIGENCIA)\s[0-9]{4})/g);
+                let claveElectorMatch = data.match(/[A-Z]{6}[0-9]{8}[HM][0-9]{3}/g);
+                let domicilioMatch = data.match(/(DOMICILIO)([\s\S]*?)(CLAVE DE ELECTOR)/g);
+                let domicilio = domicilioMatch ? domicilioMatch[0].replace(/DOMICILIO|CLAVE DE ELECTOR/g, '').trim().replace(/\s+/g, ' ') : '';
+                let cpMatch = domicilio.match(/\d{5}/g);
+                let edoMuniMatch = domicilio.match(/(\d{5})\s*(.+)/g);
+                let calleMatch = domicilio.match(/(.*)(\d{5})/g);
+                
 
-                //Expresion regular GENERO/SEXO 
-                let genero = data.match(/(SEXO)[\s]([HM])/g)[0];
-                genero = genero.replace(/SEXO/g, '').trim();
+                let nombre = nombreMatch ? nombreMatch[0].replace(/NOMBRE|DOMICILIO/g, '').trim().replace(/\s+/g, ' ') : '';
+                let genero = generoMatch ? generoMatch[0].replace(/SEXO/g, '').trim() : '';
+                let fechaNacimiento = fechaNacimientoMatch ? fechaNacimientoMatch[0] : '';
+                let curp = curpMatch ? curpMatch[0] : '';
+                let seccion = seccionMatch ? seccionMatch[0].replace(/SECCIÓN|VIGENCIA/g, '').trim() : '';
+                let claveElector = claveElectorMatch ? claveElectorMatch[0] : '';
+                let cp = cpMatch ? cpMatch[0] : '';
+                let edoMuni = edoMuniMatch ? edoMuniMatch[0].replace(/(\d{5})\s*(.+)/g, '$2') : '';
+                let calle = calleMatch ? calleMatch[0].replace(/(\d{5})/g, '') : '';
 
-                // Expresion regular FECHA DE NACIMIENTO
-                let fechaNacimiento = data.match(/(0[1-9]|[12][0-9]|3[01])[/](0[1-9]|1[0-2])[/]\d{4}/g)[0];
+                convertToJSON(nombre, genero, fechaNacimiento, curp, seccion, claveElector, cp, edoMuni, calle);
 
-                // Expresion regular CURP
-                let curp = data.match(/([A-Z][AEIOUX][A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])[HM](?:AS|B[CS]|C[CLMSH]|D[FG]|G[TR]|HG|JC|M[CNS]|N[ETL]|OC|PL|Q[TR]|S[PLR]|T[CSL]|VZ|YN|ZS)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d])(\d)/g)[0];
-
-                // Expresion regular SECCION
-                let seccion = data.match(/(SECCIÓN)[\s]([0-9]{4}|(VIGENCIA)\s[0-9]{4})/g)[0];
-                seccion = seccion.replace(/SECCIÓN|VIGENCIA/g, '').trim();
-
-                // Expresion regular CLAVE DE ELECTOR
-                let claveElector = data.match(/[A-Z]{6}[0-9]{8}[HM][0-9]{3}/g)[0];
-
-                // Expresion regular DOMICILIO
-                let domicilio = data.match(/(DOMICILIO)([\s\S]*?)(CLAVE DE ELECTOR)/g)[0];
-                domicilio = domicilio.replace(/DOMICILIO|CLAVE DE ELECTOR/g, '').trim();
-                domicilio = domicilio.replace(/\s+/g, ' ');
-
-                convertToJSON(name, genero, fechaNacimiento, curp, seccion, claveElector, domicilio);
             });
     }
 })
 
-function convertToJSON(name, genero, fechaNacimiento, curp, seccion, claveElector, domicilio) {
-    let parts = name.split(' ');
+function convertToJSON(nombre, genero, fechaNacimiento, curp, seccion, claveElector, cp, edoMuni, calle) {
+    let parts = nombre.split(' ');
     let apellidoPaterno = parts[0];
     let apellidoMaterno = parts[1];
-    let nombre = parts.slice(2).join(' ');
+    let nombres = parts.slice(2).join(' ');
 
-    let partsD = domicilio.split(' ');
-    let estado = partsD.pop().replace(/\.$/, '');
-    let domicilioL = partsD.join(' ');
-
-    let partM = domicilioL.split(' ');
-    let municipio = partM.pop().replace(/\,$/, '');
-    let domicilioC = partM.join(' ');
-
-    let partC = domicilioC.split(' ');
-    let cp = partC.pop();
-    let domicilioCalle = partC.join(' ');
+    let edo = edoMuni.split(' ');
+    let estado = edo.pop();
+    let municipio = edo.join(' ');
+    municipio = municipio.replace(/\,$/, '');
 
     let jsonObject = {
-        "nombre": nombre,
+        "nombres": nombres,
         "apellido_paterno": apellidoPaterno,
         "apellido_materno": apellidoMaterno,
         "genero": genero,
         "fecha_nacimiento": fechaNacimiento,
-        "calle": domicilioCalle,
+        "calle": calle,
         "estado": estado,
         "municipio": municipio,
         "cp": cp,
